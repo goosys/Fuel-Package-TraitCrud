@@ -11,6 +11,9 @@
 
 FuelPHPのコントローラーにCRUDを提供します。
 
+標準のscaffoldで作成されるcontrollerを共通化し、traitで提供します。
+簡単なCRUDのコントローラーはより簡便な記述で実装でき、複雑なコントローラーはオーバーライド可能なメソッド群で柔軟にカスタマイズ可能です。
+
 ## Install
 
 * git clone https://github.com/goosys/Fuel-Package-TraitCrud.git fuel/packages/trait-crud
