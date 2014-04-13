@@ -24,6 +24,10 @@ FuelPHPのコントローラーにCRUDを提供します。
 			language => 'trait-crud'
 
 * ln -s ../../../trait-crud/views/scaffolding/trait-crud fuel/packages/oil/views/scaffolding/trait-crud
+
+## Example
+
+### Default
 * oil g scaffold/trait-crud animal name:varchar kana:varchar description:text flag:bool
 * vi fuel/app/lang/ja/model.php
 
@@ -37,6 +41,10 @@ FuelPHPのコントローラーにCRUDを提供します。
 		);
 
 * cp fuel/app/lang/{ja,en}/model.php
+
+### Twig
+* ln -s ../../packages/trait-crud/views/template.twig.php fuel/app/views/template.twig.php
+* oil g scaffold/trait-crud-twig animal name:varchar kana:varchar description:text flag:bool
 
 ## Usage
 

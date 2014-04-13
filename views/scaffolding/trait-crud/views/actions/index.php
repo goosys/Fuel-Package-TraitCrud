@@ -21,7 +21,6 @@
 			<td><?php echo '<?php'; ?> echo $item<?php echo '->'.$field['name']; ?>; <?php echo '?>'; ?></td>
 <?php endforeach; ?>
 			<td>
-				<?php echo '<?php'; ?> echo render('include/list_btn',array('item'=>$item,'uri'=>'<?php echo $uri; ?>')); <?php echo '?>'; ?>
 				
 			</td>
 		</tr>
