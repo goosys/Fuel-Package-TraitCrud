@@ -6,32 +6,33 @@ trait Trait_Crud {
 	protected static $controller_name;
 	protected static $func_validate    = 'validate';
 	protected static $properties       = array();
+	protected static $exclude_keys     = array();
 	
 	protected $stash = array();
 	
-	public function _action_index()
+	public function _action_index( $options = array() )
 	{
 		$model_name = static::$model_name;
-		$this->stash['models'] = $model_name::find('all');
+		$this->stash['models'] = $model_name::find('all',$options);
 	}
 
-	public function _action_view($id = null)
+	public function _action_view($id = null, $options = array() )
 	{
 		$model_name = static::$model_name;
 		
 		if( is_null($id) ){ $this->_render_404(); }
 
-		if ( ! $this->stash['model'] = $model_name::find($id))
+		if ( ! $this->stash['model'] = $model_name::find($id, $options ))
 		{
 			$this->_could_not_found_id( array( 'id'=> $id ) );
 			$this->_render_404();
 		}
 	}
 
-	public function _action_create()
+	public function _action_create( $options = array() )
 	{
 		$model_name = static::$model_name;
-		$this->stash['model'] = $model = $model_name::forge();
+		$this->stash['model'] = $model = $model_name::forge( $options );
 		
 		if (Input::method() == 'POST')
 		{
@@ -40,7 +41,7 @@ trait Trait_Crud {
 			
 			if ($val->run())
 			{
-				$this->_set_model_from_input( array( 'model'=> $model ) );
+				$this->_set_model_from_validation( array( 'model'=> $model, 'val'=> $val ) );
 
 				if ($model && $model->save() )
 				{
@@ -66,17 +67,18 @@ trait Trait_Crud {
 	}
 	
 
-	public function _action_edit($id = null)
+	public function _action_edit($id = null, $options = array() )
 	{
 		$model_name = static::$model_name;
 		$this->stash['model'] = array();
 		
 		if( is_null($id) ){ return $this->_render_404(); }
 		
-		$this->stash['model'] = $model = $model_name::find($id);
+		$this->stash['model'] = $model = $model_name::find($id, $options);
 		if ( !$model )
 		{
 			$this->_could_not_found_id( array( 'id'=> $id ) );
+			$this->_render_404();
 		}
 
 		$func_validate = static::$func_validate;
@@ -84,7 +86,7 @@ trait Trait_Crud {
 
 		if ($val->run())
 		{
-			$this->_set_model_from_input( array( 'model'=> $model ) );
+			$this->_set_model_from_validation( array( 'model'=> $model, 'val'=> $val ) );
 
 			if ($model->save())
 			{
@@ -135,13 +137,13 @@ trait Trait_Crud {
 		}
 	}
 
-	public function _action_delete($id = null)
+	public function _action_delete($id = null, $options = array())
 	{
 		$model_name = static::$model_name;
 		
 		if( is_null($id) ){ return $this->_render_404(); }
 
-		$this->stash['model'] = $model =  $model_name::find($id);
+		$this->stash['model'] = $model =  $model_name::find($id, $options);
 		if ( $model && $model->delete() )
 		{
 			$this->_deleted( array( 'id'=> $id ) );
@@ -150,6 +152,7 @@ trait Trait_Crud {
 		else
 		{
 			$this->_could_not_delete( array( 'id'=> $id ) );
+			$this->_render_404();
 		}
 		
 		return $this->_render_delete();
@@ -168,7 +171,7 @@ trait Trait_Crud {
 	}
 	
 	public function _could_not_found_id( $params ){
-		Session::set_flash('error', sprintf('Could not find %s #%d', static::$controller_name ,$params['id'] ));
+		$this->_set_flash_message('error','Could_not_find_model',array('id' => $params['id']));
 	
 	}
 	
@@ -178,18 +181,18 @@ trait Trait_Crud {
 	
 	public function _set_model_from_input( $params ){
 		foreach ( static::model_properties() as $p ){
-			$params['model']->$p = Input::param( $p );
+			$params['model']->$p = Input::param( $p, $params['model']->$p );
 		}
 	}
 	
 	public function _added( $params ){
-		Session::set_flash('success', sprintf('Added %s #%d', static::$controller_name ,$params['model']->id ));
+		$this->_set_flash_message('success','Added_to_model',array('id' => $params['model']->id));
 		Session::set_flash('id', $params['model']->id );
 		Session::set_flash('model', $params['model'] );
 	}
 	
 	public function _could_not_save( $params ){
-		Session::set_flash('error', sprintf('Could not save %s #%d', static::$controller_name ,$params['model']->id ));
+		$this->_set_flash_message('error','Could_not_save',array('id' => $params['model']->id));
 	}
 	
 	public function _validation_error( $params ){
@@ -198,41 +201,50 @@ trait Trait_Crud {
 	}
 	
 	public function _validated( $params ){
-		Session::set_flash('success', sprintf('Validated ' ));
+		$this->_set_flash_message('success','Validated');
 	}
 	
 	public function _render_create(){
-		return Response::redirect( $this->base_segments().'/edit/'. $this->stash['model']['id'] );
+		return Response::redirect( $this->base_segments().'/view/'. $this->stash['model']['id'] );
 	}
 	
 	public function _updated( $params ){
-		Session::set_flash('success', sprintf('Added %s #%d', static::$controller_name ,$params['model']->id ));
+		$this->_set_flash_message('success','Updated_to_model',array('id' => $params['model']->id));
 	}
 	
 	public function _could_not_update( $params ){
-		Session::set_flash('error', sprintf('Could not update %s #%d', static::$controller_name ,$params['model']->id ));
+		$this->_set_flash_message('error','Could_not_update',array('id' =>$params['model']->id ));
 	}
 	
 	public function _set_model_from_validation( $params ){
 		foreach ( static::model_properties() as $p ){
-			$params['model']->$p = $params['val']->validated($p);
-		}
+			if( $params['val']->field($p) ){
+				$params['model']->$p = $params['val']->validated($p);
+			}
+		}//var_dump($params['model']);exit;
 	}
 	
 	public function _render_edit(){
-		return Response::redirect( $this->base_segments() );
+		return Response::redirect( $this->base_segments().'/view/'. $this->stash['model']['id'] );
 	}
 	
 	public function _deleted( $params ){
-		Session::set_flash('success', sprintf('Deleted %s #%d', static::$controller_name ,$params['id'] ));
+		$this->_set_flash_message('success','Deleted_to_model',array('id' =>$params['id'] ));
 	}
 	
 	public function _could_not_delete( $params ){
-		Session::set_flash('error', sprintf('Could not delete %s #%d', static::$controller_name ,$params['id']  ));
+		$this->_set_flash_message('error','Could_not_delete',array('id' =>$params['id'] ));
 	}
 	
 	public function _render_delete(){
 		return Response::redirect( $this->base_segments() );
+	}
+	
+	public function _set_flash_message( $status = 'success', $message = '', $params = array() ){
+		Session::set_flash( 
+			$status, 
+			__('trait-crud.message.'.$message, array_merge($params, $this->_lang_params())) 
+		);
 	}
 
 
@@ -253,6 +265,20 @@ trait Trait_Crud {
 		$model = static::$model_name;
 		$pr = array_keys( $model::properties() );
 		$pk = $model::primary_key(); 
-		return array_diff($pr,$pk);
+		$ex = static::$exclude_keys; 
+		return array_diff($pr,$pk,$ex);
+	}
+	
+	/**
+	 *
+	 */
+	protected function _lang_params(){
+		$p = array(
+			'controller' => static::$controller_name , 
+			'model'      => static::$model_name , 
+			'model_name' => strtolower(str_replace('Model_','',static::$model_name))
+		);
+		$p['model_L10N'] = __('model.'.$p['model_name'].'._name');
+		return $p;
 	}
 }
