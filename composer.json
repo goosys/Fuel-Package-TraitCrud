@@ -1,4 +1,10 @@
 {
-  "name": "goosys/Fuel-Package-TraitCrud",
-  "description": "trait crud system for FuelPHP"
+  
+          "name":"trait-crud",
+          "type":"fuel-package",
+  "description": "trait crud system for FuelPHP",
+  "require": {
+    "php": ">=5.4",
+    "composer/installers": "*",
+  }
 }
