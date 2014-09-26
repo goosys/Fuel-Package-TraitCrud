@@ -5,6 +5,7 @@ trait Trait_Crud {
 	protected static $model_name;
 	protected static $controller_name;
 	protected static $func_validate    = 'validate';
+	protected static $url_base;
 	protected static $properties       = array();
 	protected static $exclude_keys     = array();
 	
@@ -221,7 +222,56 @@ trait Trait_Crud {
 			if( $params['val']->field($p) ){
 				$params['model']->$p = $params['val']->validated($p);
 			}
-		}//var_dump($params['model']);exit;
+		}
+	}
+	
+	/**
+	 * related model
+	 */
+	public function _set_related_model_from_validation( $relation_name, $params )
+	{
+		$model_name = static::$model_name;
+		
+		if( !is_array($relation_name) ){
+			$has_many = Arr::get( $model_name::relations(),$relation_name );
+			$relation= $has_many->name;
+			$singular= Inflector::singularize($relation);
+			$model_to= $has_many->model_to;
+			$key_to  = $has_many->key_to;
+			$key_from= $has_many->key_from;
+		}else{
+			/* TODO closure case */
+			return false;
+		}
+		
+		$validated = $params['val']->validated( $singular )?:array();
+		$related   = $params['model']->$relation?:array();
+		$update = array_intersect_key($related,$validated);
+		$new    = array_diff_key ($validated,$related);
+		$delete = array_diff_key ($related,$validated);
+		
+		/* update */
+		foreach( $update as $id => $r ){
+			foreach( $validated[$id] as $key => $val ){
+				$r->set($key,$val);
+			}
+		}
+		/* delete */
+		foreach( $delete as $id => $r ){
+			unset($params['model']->$relation[$id]);
+		}
+		/* new */
+		foreach( $new as $id => $r ){
+			$r = $model_to::forge();
+			foreach( $validated[$id] as $key => $val ){
+				$r->set($key,$val);
+			}
+			foreach( $key_to as $idx => $key ){
+				$kf = $key_from[$idx];
+				$r->set($key,$params['model']->$kf);
+			}
+			Arr::set( $params['model']->$relation, $id, $r );
+		}
 	}
 	
 	public function _render_edit(){
