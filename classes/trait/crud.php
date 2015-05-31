@@ -59,6 +59,7 @@ trait Trait_Crud {
 			else
 			{
 				//case: POST/:controller/create && input value not valid
+				$this->_set_model_from_validation( array( 'model'=> $model, 'val'=> $val ) );
 				$this->_validation_error( array( 'val'=>$val ) );
 			}
 		}
