@@ -259,7 +259,7 @@ trait Trait_Crud {
 		}
 		/* delete */
 		foreach( $delete as $id => $r ){
-			unset($params['model']->$relation[$id]);
+			\Arr::delete($params['model']->$relation,$id);
 		}
 		/* new */
 		foreach( $new as $id => $r ){
