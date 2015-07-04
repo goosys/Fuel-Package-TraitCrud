@@ -112,7 +112,7 @@ FuelPHPのコントローラーにCRUDを提供します。
 ### 「詳細｜編集｜削除」ボタンのテンプレートを編集
 * cp -r fuel/packages/trait-crud/views/include fuel/app/views/
 
-## More Informations
+## More Information
 
 [Fuel-Package-TraitPagination](https://github.com/goosys/Fuel-Package-TraitPagination)と組み合わせることで、より簡単に検索とページャー付きのCRUDが作成できます。
 
